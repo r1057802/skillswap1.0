@@ -1,0 +1,6 @@
+{
+  "watch": ["server.js", "routes", "prisma"],
+  "ignore": ["node_modules", "generated", ".env", ".git", ".gitignore", "*.lock"],
+  "ext": "js,json",
+  "delay": 500
+}
