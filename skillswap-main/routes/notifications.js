@@ -30,6 +30,40 @@ router.get('/', async (req, res) => {
 });
 
 // -------------------------
+// [POST] Notifications
+// body: { userId, type, payload? }
+// alleen admin kan notificatie voor een user maken
+// -------------------------
+router.post('/', async (req, res) => {
+  const me = req.session?.user;
+  if (!me || me.role !== 'admin') {
+    res.status(403).json({ error: 'Forbidden' });
+    return;
+  }
+
+  const userId = Number(req.body?.userId);
+  const type = req.body?.type;
+  const payload = req.body?.payload ?? null;
+
+  if (!Number.isInteger(userId) || userId <= 0 || !type) {
+    res.status(400).json({ error: 'userId and type are required' });
+    return;
+  }
+
+  const exists = await prisma.user.findUnique({ where: { id: userId } });
+  if (!exists) {
+    res.status(404).json({ error: 'User not found' });
+    return;
+  }
+
+  const item = await prisma.notification.create({
+    data: { userId, type, payload },
+  });
+
+  res.status(201).json(item);
+});
+
+// -------------------------
 // [PATCH] Notifications/:id/read 
 // return updated notification
 // -------------------------

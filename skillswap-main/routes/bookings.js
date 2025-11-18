@@ -71,6 +71,7 @@ router.post('/', async (req, res) => {
   const listingId = Number(req.body?.listingId);
   const scheduledAt = req.body?.scheduledAt;
   const status = req.body?.status;
+  const message = req.body?.message;
 
   if (!Number.isInteger(userId) || userId <= 0 || !Number.isInteger(listingId) || listingId <= 0 || !scheduledAt) {
     res.json({ error: 'listingId and scheduledAt are required (and login)' });
@@ -98,7 +99,7 @@ router.post('/', async (req, res) => {
   const finalStatus = allowed.includes(status) ? status : 'pending';
 
   const booking = await prisma.booking.create({
-    data: { userId, ownerId: listing.ownerId, listingId, date: d, status: finalStatus },
+    data: { userId, ownerId: listing.ownerId, listingId, date: d, status: finalStatus, message },
   });
 
   res.json(booking);
@@ -119,6 +120,7 @@ router.patch('/:id', async (req, res) => {
     date: req.body?.date,
     status: req.body?.status,
     listingId: req.body?.listingId,
+    message: req.body?.message,
   };
 
   if (data.listingId !== undefined) data.listingId = Number(data.listingId);
