@@ -38,6 +38,7 @@ app.use('/auth', require('./routes/auth'));
 app.use('/users', require('./routes/users'));
 app.use('/categories', require('./routes/categories'));
 app.use('/listings', require('./routes/listings'));
+app.use('/search', require('./routes/search'));
 
 // Routes met authenticatie
 app.use('/bookings', sessionAuth, require('./routes/bookings'));
