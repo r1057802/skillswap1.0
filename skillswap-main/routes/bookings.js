@@ -9,6 +9,28 @@ const prisma = require('../lib/prisma');
 
 const sessionAuth = require('../middleware/sessionAuth');
 
+function parseSlots(raw) {
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) return parsed;
+  } catch (_) {}
+  return String(raw)
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+function isAllowedSlot(listing, dateObj) {
+  const slots = parseSlots(listing.availability);
+  if (!slots.length) return true; // no restrictions
+  const targetMs = dateObj.getTime();
+  return slots.some((s) => {
+    const d = new Date(s);
+    return !Number.isNaN(d.getTime()) && d.getTime() === targetMs;
+  });
+}
+
 // -------------------------
 // Middleware: authenticatie vereist
 // -------------------------
@@ -23,11 +45,28 @@ router.get('/', async (req, res) => {
   const isAdmin = req.session?.user?.role === 'admin';
   const qUserId = req.query?.userId ? Number(req.query.userId) : null;
 
-  const where = isAdmin && Number.isInteger(qUserId) && qUserId > 0
-    ? { userId: qUserId, deletedAt: null }
-    : { userId: sessionUserId, deletedAt: null };
+  let where;
+  if (isAdmin) {
+    where = Number.isInteger(qUserId) && qUserId > 0
+      ? { userId: qUserId, deletedAt: null }
+      : { deletedAt: null };
+  } else {
+    // Toon eigen aanvragen en aanvragen op mijn listings
+    where = {
+      deletedAt: null,
+      OR: [{ userId: sessionUserId }, { ownerId: sessionUserId }],
+    };
+  }
 
-  const bookings = await prisma.booking.findMany({ where });
+  const bookings = await prisma.booking.findMany({
+    where,
+    include: {
+      owner: true,
+      requester: true,
+      listing: true,
+    },
+    orderBy: { id: 'desc' },
+  });
   res.json(bookings);
 });
 
@@ -71,7 +110,6 @@ router.post('/', async (req, res) => {
   const listingId = Number(req.body?.listingId);
   const scheduledAt = req.body?.scheduledAt;
   const status = req.body?.status;
-  const message = req.body?.message;
 
   if (!Number.isInteger(userId) || userId <= 0 || !Number.isInteger(listingId) || listingId <= 0 || !scheduledAt) {
     res.json({ error: 'listingId and scheduledAt are required (and login)' });
@@ -82,10 +120,15 @@ router.post('/', async (req, res) => {
 
   const listing = await prisma.listing.findUnique({
     where: { id: listingId },
-    select: { ownerId: true, deletedAt: true },
+    select: { ownerId: true, deletedAt: true, availability: true },
   });
   if (!listing || listing.deletedAt) {
     res.json({ error: 'Listing not found' });
+    return;
+  }
+
+  if (!isAllowedSlot(listing, d)) {
+    res.status(400).json({ error: 'Slot not available' });
     return;
   }
 
@@ -99,7 +142,7 @@ router.post('/', async (req, res) => {
   const finalStatus = allowed.includes(status) ? status : 'pending';
 
   const booking = await prisma.booking.create({
-    data: { userId, ownerId: listing.ownerId, listingId, date: d, status: finalStatus, message },
+    data: { userId, ownerId: listing.ownerId, listingId, date: d, status: finalStatus },
   });
 
   res.json(booking);
@@ -120,7 +163,6 @@ router.patch('/:id', async (req, res) => {
     date: req.body?.date,
     status: req.body?.status,
     listingId: req.body?.listingId,
-    message: req.body?.message,
   };
 
   if (data.listingId !== undefined) data.listingId = Number(data.listingId);
@@ -136,8 +178,10 @@ router.patch('/:id', async (req, res) => {
     return;
   }
 
-  const isOwner = current.userId === req.session.user.id || req.session.user.role === 'admin';
-  if (!isOwner) {
+  const me = req.session.user;
+  const isAllowed =
+    current.userId === me.id || current.ownerId === me.id || me.role === 'admin';
+  if (!isAllowed) {
     res.json({ error: 'Forbidden' });
     return;
   }
@@ -174,6 +218,19 @@ router.patch('/:id', async (req, res) => {
   }
 
   const booking = await prisma.booking.update({ where: { id }, data });
+
+  // Notify requester on status change
+  if (data.status && current.userId) {
+    try {
+      await prisma.notification.create({
+        data: {
+          userId: current.userId,
+          type: 'booking',
+          payload: `Booking #${id} is ${data.status}`,
+        },
+      });
+    } catch (_) {}
+  }
   res.json(booking);
 });
 

@@ -30,40 +30,6 @@ router.get('/', async (req, res) => {
 });
 
 // -------------------------
-// [POST] Notifications
-// body: { userId, type, payload? }
-// alleen admin kan notificatie voor een user maken
-// -------------------------
-router.post('/', async (req, res) => {
-  const me = req.session?.user;
-  if (!me || me.role !== 'admin') {
-    res.status(403).json({ error: 'Forbidden' });
-    return;
-  }
-
-  const userId = Number(req.body?.userId);
-  const type = req.body?.type;
-  const payload = req.body?.payload ?? null;
-
-  if (!Number.isInteger(userId) || userId <= 0 || !type) {
-    res.status(400).json({ error: 'userId and type are required' });
-    return;
-  }
-
-  const exists = await prisma.user.findUnique({ where: { id: userId } });
-  if (!exists) {
-    res.status(404).json({ error: 'User not found' });
-    return;
-  }
-
-  const item = await prisma.notification.create({
-    data: { userId, type, payload },
-  });
-
-  res.status(201).json(item);
-});
-
-// -------------------------
 // [PATCH] Notifications/:id/read 
 // return updated notification
 // -------------------------
@@ -91,6 +57,50 @@ router.patch('/:id/read', async (req, res) => {
   });
 
   res.json(item);
+});
+
+// -------------------------
+// [POST] Notifications (admin) 
+// create notification for a user
+// body: { userId?, username?, type, payload }
+// -------------------------
+router.post('/', async (req, res) => {
+  if (req.session?.user?.role !== 'admin') {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+
+  const type = req.body?.type;
+  const payload = req.body?.payload || null;
+  const userIdRaw = req.body?.userId;
+  const username = req.body?.username;
+
+  if (!type) {
+    return res.json({ error: 'type is required' });
+  }
+
+  let targetUser = null;
+
+  if (username) {
+    targetUser = await prisma.user.findUnique({ where: { username } });
+  } else if (userIdRaw) {
+    const userId = Number(userIdRaw);
+    if (!Number.isInteger(userId) || userId <= 0) {
+      return res.json({ error: 'Invalid userId' });
+    }
+    targetUser = await prisma.user.findUnique({ where: { id: userId } });
+  } else {
+    return res.json({ error: 'username or userId is required' });
+  }
+
+  if (!targetUser) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+
+  const notif = await prisma.notification.create({
+    data: { userId: targetUser.id, type, payload },
+  });
+
+  res.json(notif);
 });
 
 module.exports = router;

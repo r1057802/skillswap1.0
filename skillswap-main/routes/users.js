@@ -11,6 +11,24 @@ const sessionAuth = require('../middleware/sessionAuth');
 // [REMOVED] Public create endpoint moved to /auth/register
 // POST /users is intentionally removed to avoid duplication.
 
+// -------------------------
+// [GET] Users (admin only)
+// return minimal list of users
+// -------------------------
+router.get('/', sessionAuth, async (req, res) => {
+  if (req.session?.user?.role !== 'admin') {
+    return res.status(403).json({ error: 'Admin only' });
+  }
+
+  const users = await prisma.user.findMany({
+    where: { deletedAt: null },
+    select: { id: true, username: true, email: true, role: true },
+    orderBy: { id: 'asc' },
+  });
+
+  res.json(users);
+});
+
 
 
 // -------------------------

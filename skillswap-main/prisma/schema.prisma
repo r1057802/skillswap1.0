@@ -7,85 +7,62 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum BookingStatus {
+  pending
+  accepted
+  rejected
+  canceled
+}
+
 model User {
-  id              Int            @id @default(autoincrement())
-  username        String         @unique
-  email           String         @unique
-  passwordHash    String
-  role            String         @default("user")
-   passwordResetToken        String?
-   passwordResetTokenExpiresAt DateTime?
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
-  bookingOwned    Booking[]      @relation("BookingOwner")
-  bookingRequests Booking[]      @relation("BookingRequester")
-  favorites       Favorite[]
-  ownerListings   Listing[]      @relation("OwnerListings")
-  notifications   Notification[]
-  searchLogs      SearchLog[]
-  sessions        Session[]
+  id                          Int           @id @default(autoincrement())
+  username                    String        @unique
+  email                       String        @unique
+  passwordHash                String
+  role                        String        @default("user")
+  passwordResetToken          String?
+  passwordResetTokenExpiresAt DateTime?
+  deletedAt                   DateTime?
+  createdAt                   DateTime      @default(now())
+  updatedAt                   DateTime      @updatedAt
+
+  // Relations
+  bookingOwned                Booking[]     @relation("BookingOwner")
+  bookingRequests             Booking[]     @relation("BookingRequester")
+  favorites                   Favorite[]
+  ownerListings               Listing[]     @relation("OwnerListings")
+  notifications               Notification[]
+  searchLogs                  SearchLog[]
+  sessions                    Session[]
 
   @@map("users")
 }
 
-model Category {
-  id        Int       @id @default(autoincrement())
-  name      String
-  slug      String    @unique
-  createdAt DateTime  @default(now())
-  listings  Listing[]
-
-  @@map("categories")
-}
-
-model Session {
-  id         Int       @id @default(autoincrement())
-  userId     Int
-  role       String
-  loginTime  DateTime  @default(now())
-  logoutTime DateTime?
-  user       User      @relation(fields: [userId], references: [id])
-
-  @@index([userId], map: "sessions_userId_fkey")
-  @@map("sessions")
-}
-
-model Notification {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  type      String
-  payload   String?
-  isRead    Boolean  @default(false)
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id])
-
-  @@index([userId], map: "notifications_userId_fkey")
-  @@map("notifications")
-}
-
 model Listing {
-  id           Int         @id @default(autoincrement())
-  ownerId      Int
-  type         ListingType
-  categoryId   Int
-  title        String
-  description  String?
+  id          Int        @id @default(autoincrement())
+  ownerId     Int
+  type        String
+  categoryId  Int
+  title       String
+  description String?
   availability String?
-  imageUrl     String?
-  country      String?
-  city         String?
-  latitude     Decimal?    @db.Decimal(10, 7)
-  longitude    Decimal?    @db.Decimal(10, 7)
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
-  deletedAt    DateTime?
-  bookings     Booking[]
-  favorites    Favorite[]
-  category     Category    @relation(fields: [categoryId], references: [id])
-  owner        User        @relation("OwnerListings", fields: [ownerId], references: [id])
+  imageUrl    String?
+  country     String?
+  city        String?
+  latitude    Decimal?   @db.Decimal(10, 7)
+  longitude   Decimal?   @db.Decimal(10, 7)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  deletedAt   DateTime?
 
-  @@index([categoryId], map: "listings_categoryId_fkey")
+  // Relations
+  owner       User       @relation("OwnerListings", fields: [ownerId], references: [id])
+  category    Category   @relation(fields: [categoryId], references: [id])
+  bookings    Booking[]
+  favorites   Favorite[]
+
   @@index([ownerId], map: "listings_ownerId_fkey")
+  @@index([categoryId], map: "listings_categoryId_fkey")
   @@map("listings")
 }
 
@@ -99,6 +76,9 @@ model Booking {
   date      DateTime?
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
+  deletedAt DateTime?
+
+  // Relations
   listing   Listing       @relation(fields: [listingId], references: [id])
   owner     User          @relation("BookingOwner", fields: [ownerId], references: [id])
   requester User          @relation("BookingRequester", fields: [userId], references: [id])
@@ -110,37 +90,66 @@ model Booking {
 }
 
 model Favorite {
-  id        Int      @id @default(autoincrement())
+  id        Int       @id @default(autoincrement())
   userId    Int
   listingId Int
-  createdAt DateTime @default(now())
-  listing   Listing  @relation(fields: [listingId], references: [id])
-  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime  @default(now())
+
+  // Relations
+  user      User      @relation(fields: [userId], references: [id])
+  listing   Listing   @relation(fields: [listingId], references: [id])
 
   @@unique([userId, listingId])
+  @@index([userId], map: "favorites_userId_fkey")
   @@index([listingId], map: "favorites_listingId_fkey")
   @@map("favorites")
 }
 
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  type      String
+  payload   String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId], map: "notifications_userId_fkey")
+  @@map("notifications")
+}
+
 model SearchLog {
   id        Int      @id @default(autoincrement())
-  userId    Int?
-  query     String
+  userId    Int
+  query     String?
   createdAt DateTime @default(now())
-  user      User?    @relation(fields: [userId], references: [id])
 
-  @@index([userId], map: "search_logs_userId_fkey")
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId], map: "searchlogs_userId_fkey")
   @@map("search_logs")
 }
 
-enum ListingType {
-  OFFER
-  SEEK
+model Session {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  role      String
+  loginTime DateTime @default(now())
+  logoutTime DateTime?
+
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId], map: "sessions_userId_fkey")
+  @@map("sessions")
 }
 
-enum BookingStatus {
-  pending
-  accepted
-  rejected
-  canceled
+model Category {
+  id        Int        @id @default(autoincrement())
+  name      String
+  slug      String
+  createdAt DateTime   @default(now())
+  listings  Listing[]
+
+  @@map("categories")
 }

@@ -29,6 +29,30 @@ export default defineConfig({
         target: 'http://localhost:3000',
         changeOrigin: true,
       },
+      '/notifications': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
+      '/users': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
+      '/categories': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
+      '/bookings': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
+      '/upload': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
+      '/uploads': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
     },
   },
 })

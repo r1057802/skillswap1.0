@@ -45,7 +45,7 @@ router.post('/', sessionAuth, async (req, res) => {
       type,
       title,
       description,
-      availability,
+      availability: Array.isArray(availability) ? JSON.stringify(availability) : availability,
       imageUrl,
       country,
       city,
@@ -63,11 +63,13 @@ router.post('/', sessionAuth, async (req, res) => {
 // -------------------------
 router.get('/', async (_req, res) => {
   const listings = await prisma.listing.findMany({
+    where: { deletedAt: null },
     include: {
       owner: true,
       category: true,
       _count: { select: { favorites: true } },
     },
+    orderBy: { id: 'desc' },
   });
   res.json(listings);
 });
@@ -83,8 +85,8 @@ router.get('/:id', async (req, res) => {
     return;
   }
 
-  const listing = await prisma.listing.findUnique({
-    where: { id },
+  const listing = await prisma.listing.findFirst({
+    where: { id, deletedAt: null },
     include: {
       owner: true,
       category: true,
@@ -93,7 +95,7 @@ router.get('/:id', async (req, res) => {
   });
 
   if (!listing) {
-    res.json({ error: 'Not found' });
+    res.status(404).json({ error: 'Not found' });
     return;
   }
 
@@ -114,6 +116,12 @@ router.post('/:id/favorite', sessionAuth, async (req, res) => {
   }
   if (!Number.isInteger(userId) || userId <= 0) {
     res.json({ error: 'Not authenticated' });
+    return;
+  }
+
+  const listing = await prisma.listing.findFirst({ where: { id: listingId, deletedAt: null } });
+  if (!listing) {
+    res.status(404).json({ error: 'Listing not found' });
     return;
   }
 
@@ -140,6 +148,12 @@ router.delete('/:id/favorite', sessionAuth, async (req, res) => {
   }
   if (!Number.isInteger(userId) || userId <= 0) {
     res.json({ error: 'Not authenticated' });
+    return;
+  }
+
+  const listing = await prisma.listing.findFirst({ where: { id: listingId, deletedAt: null } });
+  if (!listing) {
+    res.status(404).json({ error: 'Listing not found' });
     return;
   }
 
@@ -172,20 +186,44 @@ router.post('/:id/bookings', sessionAuth, async (req, res) => {
   const when = new Date(scheduledAt);
 
   const conflict = await prisma.booking.findFirst({
-    where: { listingId, date: when },
+    where: { listingId, date: when, deletedAt: null },
   });
   if (conflict) {
-    res.json({ error: 'Booking already exists for this listing and time' });
+    res.status(409).json({ error: 'Booking already exists for this listing and time' });
     return;
   }
 
   const listing = await prisma.listing.findUnique({
     where: { id: listingId },
-    select: { ownerId: true },
+    select: { ownerId: true, availability: true },
   });
   if (!listing) {
     res.json({ error: 'Listing not found' });
     return;
+  }
+
+  // Availability check (reuse helper idea from bookings route)
+  const slots = (() => {
+    if (!listing.availability) return [];
+    try {
+      const parsed = JSON.parse(listing.availability);
+      if (Array.isArray(parsed)) return parsed;
+    } catch (_) {}
+    return String(listing.availability)
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+  })();
+  if (slots.length) {
+    const targetMs = when.getTime();
+    const ok = slots.some((s) => {
+      const d = new Date(s);
+      return !Number.isNaN(d.getTime()) && d.getTime() === targetMs;
+    });
+    if (!ok) {
+      res.status(400).json({ error: 'Slot not available' });
+      return;
+    }
   }
 
   const booking = await prisma.booking.create({
@@ -193,6 +231,32 @@ router.post('/:id/bookings', sessionAuth, async (req, res) => {
   });
 
   res.json(booking);
+});
+
+// -------------------------
+// [DELETE] Listings/:id (admin only, soft delete)
+// -------------------------
+router.delete('/:id', sessionAuth, async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.json({ error: 'Invalid id' });
+  }
+
+  if (req.session?.user?.role !== 'admin') {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+
+  const current = await prisma.listing.findUnique({ where: { id } });
+  if (!current || current.deletedAt) {
+    return res.status(204).send();
+  }
+
+  await prisma.listing.update({
+    where: { id },
+    data: { deletedAt: new Date() },
+  });
+
+  return res.status(204).send();
 });
 
 module.exports = router;

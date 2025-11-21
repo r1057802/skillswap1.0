@@ -1,35 +1,45 @@
 <!-- Simple login page for SkillSwap -->
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { user } from '@/auth'
 
 const email = ref('')
 const password = ref('')
 const message = ref('')
+const router = useRouter()
 
-const login = () => {
+const API_BASE = import.meta.env.VITE_API_BASE || ''
+
+const login = async () => {
   message.value = ''
 
-  fetch('/auth/login', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      email: email.value,
-      password: password.value,
-    }),
-  })
-    .then((res) => res.json())
-    .then((data) => {
-      if (data.error) {
-        message.value = data.error
-      } else {
-        message.value = 'Logged in as ' + data.username
-      }
+  try {
+    const res = await fetch(`${API_BASE}/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({
+        email: email.value,
+        password: password.value,
+      }),
     })
-    .catch(() => {
-      message.value = 'Login failed'
-    })
+
+    const data = await res.json()
+    if (!res.ok || data.error) {
+      message.value = data.error || `Login mislukt (${res.status})`
+      return
+    }
+
+    user.value = data
+    const target = data.role === 'admin' ? '/admin' : '/dashboard'
+    message.value = `Ingelogd als ${data.username}`
+    router.push(target)
+  } catch (err) {
+    message.value = 'Login failed'
+  }
 }
 </script>
 

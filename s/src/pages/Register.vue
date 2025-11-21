@@ -1,37 +1,46 @@
 <!-- Simple register page for SkillSwap -->
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { user } from '@/auth'
 
 const username = ref('')
 const email = ref('')
 const password = ref('')
 const message = ref('')
+const router = useRouter()
 
-const register = () => {
+const API_BASE = import.meta.env.VITE_API_BASE || ''
+
+const register = async () => {
   message.value = ''
 
-  fetch('/auth/register', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      username: username.value,
-      email: email.value,
-      password: password.value,
-    }),
-  })
-    .then((res) => res.json())
-    .then((data) => {
-      if (data.error) {
-        message.value = data.error
-      } else {
-        message.value = 'Registered as ' + data.username
-      }
+  try {
+    const res = await fetch(`${API_BASE}/auth/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({
+        username: username.value,
+        email: email.value,
+        password: password.value,
+      }),
     })
-    .catch(() => {
-      message.value = 'Registration failed'
-    })
+
+    const data = await res.json()
+    if (!res.ok || data.error) {
+      message.value = data.error || `Registratie mislukt (${res.status})`
+      return
+    }
+
+    user.value = data
+    message.value = 'Geregistreerd als ' + data.username
+    router.push('/dashboard')
+  } catch (err) {
+    message.value = 'Registration failed'
+  }
 }
 </script>
 

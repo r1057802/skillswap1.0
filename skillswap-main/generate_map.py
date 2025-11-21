@@ -1,0 +1,121 @@
+import folium
+from folium.plugins import MarkerCluster
+import mysql.connector
+from geopy.geocoders import Nominatim
+import pycountry
+import time
+import os
+from decimal import Decimal
+
+# Eenvoudige DB-config (pas aan aan je .env)
+# Of parse DATABASE_URL met python-dotenv als je wil.
+config = {
+    'host': 'localhost',
+    'user': 'root',
+    'password': 'Senina12',
+    'database': 'skillswap',
+}
+
+def haal_data_op():
+    conn = mysql.connector.connect(**config)
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("""
+        SELECT 
+            id,
+            title,
+            city,
+            country,
+            latitude,
+            longitude,
+            imageUrl
+        FROM listings
+        WHERE deletedAt IS NULL
+    """)
+    data = cursor.fetchall()
+    conn.close()
+    return data
+
+def update_coordinaten(id, lat, lon):
+    conn = mysql.connector.connect(**config)
+    cursor = conn.cursor()
+    cursor.execute(
+        "UPDATE listings SET latitude = %s, longitude = %s WHERE id = %s",
+        (lat, lon, id)
+    )
+    conn.commit()
+    conn.close()
+
+def genereer_map():
+    geolocator = Nominatim(user_agent="skillswap-map")
+    data = haal_data_op()
+
+    # Default: Brussel
+    kaart = folium.Map(location=[50.85, 4.35], zoom_start=5)
+    cluster = MarkerCluster().add_to(kaart)
+
+    for rij in data:
+        lat = rij['latitude']
+        lon = rij['longitude']
+
+        # Prisma/SQL Decimal -> float
+        if isinstance(lat, Decimal):
+            lat = float(lat)
+        if isinstance(lon, Decimal):
+            lon = float(lon)
+
+        # Geolocatie ophalen indien nodig
+        if lat is None or lon is None:
+            land = rij['country']
+            if land:
+                try:
+                    country_obj = pycountry.countries.lookup(land)
+                    land = country_obj.name
+                except Exception:
+                    pass
+
+            locatie_parts = []
+            if rij['city']:
+                locatie_parts.append(rij['city'])
+            if land:
+                locatie_parts.append(land)
+            locatie = ", ".join(locatie_parts)
+
+            if not locatie:
+                continue  # geen locatie-informatie
+
+            try:
+                loc = geolocator.geocode(locatie)
+                if loc:
+                    lat, lon = loc.latitude, loc.longitude
+                    update_coordinaten(rij['id'], lat, lon)
+                    time.sleep(1)  # respecteer Nominatim rate limiting
+                else:
+                    continue
+            except Exception:
+                continue
+
+        image_html = ""
+        if rij.get('imageUrl'):
+            image_html = f'<br><img src="{rij["imageUrl"]}" width="150"/>'
+
+        popup_html = f"""
+        <div style="font-family: Arial; font-size: 13px; padding: 6px; width: 200px;">
+            <strong>{rij['title']}</strong><br>
+            Stad: {rij.get('city') or '-'}<br>
+            Land: {rij.get('country') or '-'}
+            {image_html}
+        </div>
+        """
+
+        folium.Marker(
+            location=[lat, lon],
+            popup=folium.Popup(popup_html, max_width=250, min_width=150)
+        ).add_to(cluster)
+
+    # map.html in dezelfde map als server.js
+    out_path = os.path.join(os.path.dirname(__file__), "map.html")
+    kaart.save(out_path)
+    print("map.html opgeslagen op:", out_path)
+
+if __name__ == "__main__":
+    genereer_map()
