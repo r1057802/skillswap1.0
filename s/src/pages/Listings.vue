@@ -3,7 +3,9 @@ import { ref, onMounted } from 'vue'
 
 const listings = ref([])
 const loading = ref(false)
+const searching = ref(false)
 const message = ref('')
+const searchTerm = ref('')
 const API_BASE = import.meta.env.VITE_API_BASE || ''
 
 const loadListings = async () => {
@@ -27,12 +29,55 @@ const loadListings = async () => {
   }
 }
 
+const searchListings = async () => {
+  if (!searchTerm.value.trim()) {
+    return loadListings()
+  }
+  searching.value = true
+  message.value = ''
+  try {
+    const res = await fetch(
+      `${API_BASE}/search?query=${encodeURIComponent(searchTerm.value.trim())}`,
+      { credentials: 'include' }
+    )
+    const data = await res.json()
+    if (!res.ok || data.error) {
+      message.value = data.error || `Zoeken mislukt (${res.status})`
+      return
+    }
+    const results = Array.isArray(data.results) ? data.results : []
+    listings.value = results
+    message.value = results.length ? '' : `Geen resultaten voor "${searchTerm.value.trim()}"`
+  } catch (e) {
+    message.value = 'Zoeken mislukt.'
+  } finally {
+    searching.value = false
+  }
+}
+
+const resetSearch = () => {
+  searchTerm.value = ''
+  loadListings()
+}
+
 onMounted(loadListings)
 </script>
 
 <template>
   <main class="listings">
     <h1>Listings overzicht</h1>
+
+    <form class="search-bar" @submit.prevent="searchListings">
+      <input
+        v-model="searchTerm"
+        type="search"
+        placeholder="Zoek op titel, beschrijving, stad, land..."
+      />
+      <button type="submit" :disabled="loading || searching">
+        {{ searching ? 'Zoeken...' : 'Zoek' }}
+      </button>
+      <button type="button" class="ghost" :disabled="loading" @click="resetSearch">Reset</button>
+    </form>
 
     <p v-if="loading">Laden...</p>
     <p v-else-if="message">{{ message }}</p>
@@ -70,6 +115,36 @@ onMounted(loadListings)
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 12px;
+}
+
+.search-bar {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.search-bar input {
+  flex: 1;
+  min-width: 220px;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+}
+
+.search-bar button {
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid #0f172a;
+  background: #0f172a;
+  color: #e2e8f0;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.search-bar button.ghost {
+  background: #fff;
+  color: #0f172a;
 }
 
 .card {

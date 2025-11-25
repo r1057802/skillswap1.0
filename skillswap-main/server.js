@@ -39,6 +39,7 @@ app.use('/users', require('./routes/users'));
 app.use('/categories', require('./routes/categories'));
 app.use('/listings', require('./routes/listings'));
 app.use('/search', require('./routes/search'));
+app.use('/map', require('./routes/map'));
 
 // Routes met authenticatie
 app.use('/bookings', sessionAuth, require('./routes/bookings'));

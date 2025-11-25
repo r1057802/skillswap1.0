@@ -23,8 +23,7 @@ router.post('/', sessionAuth, async (req, res) => {
     imageUrl,
     country,
     city,
-    latitude,
-    longitude,
+    address,
   } = req.body || {};
 
   const ownerId = req.session?.user?.id;
@@ -33,8 +32,8 @@ router.post('/', sessionAuth, async (req, res) => {
     return;
   }
 
-  if (!categoryId || !type || !title) {
-    res.json({ error: 'categoryId, type and title are required' });
+  if (!categoryId || !type || !title || !address) {
+    res.json({ error: 'categoryId, type, title and address are required' });
     return;
   }
 
@@ -49,8 +48,7 @@ router.post('/', sessionAuth, async (req, res) => {
       imageUrl,
       country,
       city,
-      latitude,
-      longitude,
+      address,
     },
   });
 

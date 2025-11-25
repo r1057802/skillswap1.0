@@ -10,6 +10,7 @@
       <RouterLink class="admin-card" to="/admin/users">Users</RouterLink>
       <RouterLink class="admin-card" to="/admin/bookings">Bookings</RouterLink>
       <RouterLink class="admin-card" to="/admin/messages">Messages</RouterLink>
+      <RouterLink class="admin-card" to="/admin/settings">Extra settings</RouterLink>
     </div>
   </main>
 </template>

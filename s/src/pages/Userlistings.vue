@@ -17,11 +17,9 @@ const form = ref({
   categoryId: '',
   type: '',
   description: '',
-  imageUrl: '',
   country: '',
   city: '',
-  latitude: '',
-  longitude: '',
+  address: '',
 })
 
 const API_BASE = import.meta.env.VITE_API_BASE || ''
@@ -80,13 +78,13 @@ const loadListings = () => {
 
 const createListing = async () => {
   message.value = ''
-  if (!form.value.title || !form.value.categoryId || !form.value.type) {
-    message.value = 'Titel, categoryId en type zijn verplicht.'
+  if (!form.value.title || !form.value.categoryId || !form.value.type || !form.value.address) {
+    message.value = 'Titel, categoryId, type en adres zijn verplicht.'
     return
   }
   submitting.value = true
   try {
-    let finalImageUrl = form.value.imageUrl || ''
+    let finalImageUrl = ''
     const file = fileInput.value?.files?.[0]
     if (file) {
       const fd = new FormData()
@@ -118,8 +116,7 @@ const createListing = async () => {
         imageUrl: finalImageUrl || undefined,
         country: form.value.country || undefined,
         city: form.value.city || undefined,
-        latitude: form.value.latitude ? Number(form.value.latitude) : undefined,
-        longitude: form.value.longitude ? Number(form.value.longitude) : undefined,
+        address: form.value.address || undefined,
       }),
     })
     const data = await res.json()
@@ -133,11 +130,9 @@ const createListing = async () => {
       categoryId: '',
       type: '',
       description: '',
-      imageUrl: '',
       country: '',
       city: '',
-      latitude: '',
-      longitude: '',
+      address: '',
     }
     availabilitySlots.value = []
     if (fileInput.value) fileInput.value.value = ''
@@ -205,28 +200,22 @@ onMounted(() => {
       </div>
       <div class="form-grid">
         <label>
-          Afbeelding URL
-          <input v-model="form.imageUrl" type="url" placeholder="https://..." />
-        </label>
-        <label>
           Upload bestand
           <input ref="fileInput" type="file" accept="image/*" />
         </label>
+      </div>
+      <div class="form-grid location-grid">
         <label>
           Land
-          <input v-model="form.country" type="text" placeholder="bijv. België" />
+          <input v-model="form.country" type="text" placeholder="bijv. Belgie" />
         </label>
         <label>
           Stad
           <input v-model="form.city" type="text" placeholder="bijv. Antwerpen" />
         </label>
         <label>
-          Latitude
-          <input v-model="form.latitude" type="number" step="any" placeholder="bv. 51.2194" />
-        </label>
-        <label>
-          Longitude
-          <input v-model="form.longitude" type="number" step="any" placeholder="bv. 4.4025" />
+          Adres
+          <input v-model="form.address" type="text" placeholder="Straat 1, postcode" />
         </label>
       </div>
       <button :disabled="submitting" class="primary" @click="createListing">
@@ -271,6 +260,10 @@ onMounted(() => {
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 12px;
   margin: 12px 0;
+}
+
+.location-grid {
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
 }
 
 label {

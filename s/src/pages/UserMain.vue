@@ -75,6 +75,7 @@ onMounted(loadBookings)
       <RouterLink class="user-card" to="/notifications">Notificaties</RouterLink>
       <RouterLink class="user-card" to="/my-listings">Mijn listings / toevoegen</RouterLink>
       <RouterLink class="user-card" to="/listings">Alle listings</RouterLink>
+      <RouterLink class="user-card" to="/kaart">Kaart</RouterLink>
     </div>
 
     <section class="card">
