@@ -41,9 +41,10 @@ router.use(sessionAuth);
 // return array (own bookings; admin may pass ?userId=)
 // -------------------------
 router.get('/', async (req, res) => {
-  const sessionUserId = Number(req.session?.user?.id);
-  const isAdmin = req.session?.user?.role === 'admin';
-  const qUserId = req.query?.userId ? Number(req.query.userId) : null;
+  const sessionUserId = Number(req.session.user.id);
+  const isAdmin = req.session.user.role === 'admin';
+
+  const qUserId = req.query.userId ? Number(req.query.userId) : null;
 
   let where;
   if (isAdmin) {
@@ -51,7 +52,6 @@ router.get('/', async (req, res) => {
       ? { userId: qUserId, deletedAt: null }
       : { deletedAt: null };
   } else {
-    // Toon eigen aanvragen en aanvragen op mijn listings
     where = {
       deletedAt: null,
       OR: [{ userId: sessionUserId }, { ownerId: sessionUserId }],
@@ -82,11 +82,7 @@ router.get('/:id', async (req, res) => {
   }
 
   const booking = await prisma.booking.findUnique({ where: { id } });
-  if (!booking) {
-    res.json({ error: 'Booking not found' });
-    return;
-  }
-  if (booking.deletedAt) {
+  if (!booking || booking.deletedAt) {
     res.json({ error: 'Booking not found' });
     return;
   }
@@ -106,7 +102,7 @@ router.get('/:id', async (req, res) => {
 // return created booking
 // -------------------------
 router.post('/', async (req, res) => {
-  const userId = Number(req.session?.user?.id);
+  const userId = Number(req.session.user.id);
   const listingId = Number(req.body?.listingId);
   const scheduledAt = req.body?.scheduledAt;
   const status = req.body?.status;
@@ -169,11 +165,7 @@ router.patch('/:id', async (req, res) => {
   if (data.date !== undefined) data.date = new Date(data.date);
 
   const current = await prisma.booking.findUnique({ where: { id } });
-  if (!current) {
-    res.json({ error: 'Booking not found' });
-    return;
-  }
-  if (current.deletedAt) {
+  if (!current || current.deletedAt) {
     res.json({ error: 'Booking not found' });
     return;
   }
@@ -181,6 +173,7 @@ router.patch('/:id', async (req, res) => {
   const me = req.session.user;
   const isAllowed =
     current.userId === me.id || current.ownerId === me.id || me.role === 'admin';
+
   if (!isAllowed) {
     res.json({ error: 'Forbidden' });
     return;
@@ -219,7 +212,6 @@ router.patch('/:id', async (req, res) => {
 
   const booking = await prisma.booking.update({ where: { id }, data });
 
-  // Notify requester on status change
   if (data.status && current.userId) {
     try {
       await prisma.notification.create({
@@ -246,22 +238,20 @@ router.delete('/:id', async (req, res) => {
   }
 
   const current = await prisma.booking.findUnique({ where: { id } });
-  if (!current) {
-    res.json({ ok: true });
-    return;
-  }
-  if (current.deletedAt) {
+  if (!current || current.deletedAt) {
     res.json({ ok: true });
     return;
   }
 
-  const me = req.session?.user;
-  const isOwner = me && (current.userId === me.id || current.ownerId === me.id);
-  const isAdmin = me && me.role === 'admin';
+  const me = req.session.user;
+  const isOwner = current.userId === me.id || current.ownerId === me.id;
+  const isAdmin = me.role === 'admin';
+
   if (!isOwner && !isAdmin) {
     res.status(403).json({ error: 'Forbidden' });
     return;
   }
+
   await prisma.booking.update({ where: { id }, data: { deletedAt: new Date() } });
   res.status(204).send();
 });

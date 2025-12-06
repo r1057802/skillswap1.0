@@ -17,42 +17,12 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      '/artists': {
+      '/api': {
         target: 'http://localhost:3000',
         changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
       },
-      '/auth': {
-        target: 'http://localhost:3000',
-        changeOrigin: true,
-      },
-      '/listings': {
-        target: 'http://localhost:3000',
-        changeOrigin: true,
-      },
-      '/notifications': {
-        target: 'http://localhost:3000',
-        changeOrigin: true,
-      },
-      '/users': {
-        target: 'http://localhost:3000',
-        changeOrigin: true,
-      },
-      '/categories': {
-        target: 'http://localhost:3000',
-        changeOrigin: true,
-      },
-      '/bookings': {
-        target: 'http://localhost:3000',
-        changeOrigin: true,
-      },
-      '/map': {
-        target: 'http://localhost:3000',
-        changeOrigin: true,
-      },
-      '/upload': {
-        target: 'http://localhost:3000',
-        changeOrigin: true,
-      },
+      // serve geuploade afbeeldingen direct vanaf backend
       '/uploads': {
         target: 'http://localhost:3000',
         changeOrigin: true,

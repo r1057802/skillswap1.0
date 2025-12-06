@@ -1,8 +1,16 @@
+// search.js
+
+// --------------------------------------------------
+// Import packages
+// --------------------------------------------------
 const express = require('express');
 const router = express.Router();
 const prisma = require('../lib/prisma');
 
-// GET /search?query=tekst
+// --------------------------------------------------
+// [GET] /search?query=tekst
+// Full-text style search on listings
+// --------------------------------------------------
 router.get('/', async (req, res) => {
   try {
     const { query } = req.query;
@@ -15,10 +23,10 @@ router.get('/', async (req, res) => {
       where: {
         deletedAt: null,
         OR: [
-          { title: { contains: query, mode: 'insensitive' } },
-          { description: { contains: query, mode: 'insensitive' } },
-          { city: { contains: query, mode: 'insensitive' } },
-          { country: { contains: query, mode: 'insensitive' } },
+          { title: { contains: query } },
+          { description: { contains: query } },
+          { city: { contains: query } },
+          { country: { contains: query } },
         ],
       },
       take: 50,
@@ -27,6 +35,7 @@ router.get('/', async (req, res) => {
 
     res.json({ results: listings, query });
   } catch (err) {
+    console.error('search error', err);
     res.status(500).json({ error: 'Zoeken mislukt' });
   }
 });

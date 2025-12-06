@@ -7,6 +7,11 @@ import time
 import os
 from decimal import Decimal
 
+# Frontend URL voor deeplink naar boeken
+FRONTEND_BASE = os.environ.get('FRONTEND_BASE_URL', 'http://localhost:5173')
+# Backend URL om imageUrl volledig te maken indien relatief
+BACKEND_BASE = os.environ.get('BACKEND_BASE_URL', 'http://localhost:3000')
+
 # Eenvoudige DB-config (pas aan aan je .env)
 # Of parse DATABASE_URL met python-dotenv als je wil.
 config = {
@@ -96,14 +101,20 @@ def genereer_map():
 
         image_html = ""
         if rij.get('imageUrl'):
-            image_html = f'<br><img src="{rij["imageUrl"]}" width="150"/>'
+            img = rij["imageUrl"]
+            if img.startswith('/'):
+                img = f"{BACKEND_BASE}{img}"
+            image_html = f'<br><img src="{img}" width="150"/>'
+
+        detail_url = f"{FRONTEND_BASE}/listings/{rij['id']}"
 
         popup_html = f"""
         <div style="font-family: Arial; font-size: 13px; padding: 6px; width: 200px;">
             <strong>{rij['title']}</strong><br>
             Stad: {rij.get('city') or '-'}<br>
             Land: {rij.get('country') or '-'}
-            {image_html}
+            {image_html}<br>
+            <a href="{detail_url}" target="_blank" style="display:inline-block;margin-top:6px;padding:6px 10px;background:#0f172a;color:#e2e8f0;text-decoration:none;border-radius:6px;font-weight:700;">Boek deze listing</a>
         </div>
         """
 

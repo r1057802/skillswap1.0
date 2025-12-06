@@ -1,25 +1,25 @@
 // notifications.js
-// -------------------------
+
+// --------------------------------------------------
 // Import packages
-// -------------------------
+// --------------------------------------------------
 const express = require('express');
 const router = express.Router();
 
 const prisma = require('../lib/prisma');
-
 const sessionAuth = require('../middleware/sessionAuth');
 
-// -------------------------
+// --------------------------------------------------
 // Middleware: authenticatie vereist
-// -------------------------
+// --------------------------------------------------
 router.use(sessionAuth);
 
-// -------------------------
-// [GET] Notifications 
-// return array (eigen user)
-// -------------------------
+// --------------------------------------------------
+// [GET] /notifications
+// Get all notifications for current user
+// --------------------------------------------------
 router.get('/', async (req, res) => {
-  const userId = Number(req.session?.user?.id);
+  const userId = Number(req.session.user.id);
 
   const items = await prisma.notification.findMany({
     where: { userId },
@@ -29,10 +29,10 @@ router.get('/', async (req, res) => {
   res.json(items);
 });
 
-// -------------------------
-// [PATCH] Notifications/:id/read 
-// return updated notification
-// -------------------------
+// --------------------------------------------------
+// [PATCH] /notifications/:id/read
+// Mark notification as read
+// --------------------------------------------------
 router.patch('/:id/read', async (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id) || id <= 0) {
@@ -59,20 +59,19 @@ router.patch('/:id/read', async (req, res) => {
   res.json(item);
 });
 
-// -------------------------
-// [POST] Notifications (admin) 
-// create notification for a user
-// body: { userId?, username?, type, payload }
-// -------------------------
+// --------------------------------------------------
+// [POST] /notifications (admin)
+// Create notification for a specific user
+// --------------------------------------------------
 router.post('/', async (req, res) => {
-  if (req.session?.user?.role !== 'admin') {
+  if (req.session.user.role !== 'admin') {
     return res.status(403).json({ error: 'Forbidden' });
   }
 
-  const type = req.body?.type;
-  const payload = req.body?.payload || null;
-  const userIdRaw = req.body?.userId;
-  const username = req.body?.username;
+  const type = req.body.type;
+  const payload = req.body.payload || null;
+  const userIdRaw = req.body.userId;
+  const username = req.body.username;
 
   if (!type) {
     return res.json({ error: 'type is required' });

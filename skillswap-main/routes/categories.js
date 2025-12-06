@@ -1,26 +1,27 @@
 // categories.js
-// -------------------------
+
+// --------------------------------------------------
 // Import packages
-// -------------------------
+// --------------------------------------------------
 const express = require('express');
 const router = express.Router();
 const prisma = require('../lib/prisma');
 const sessionAuth = require('../middleware/sessionAuth');
 
-// -------------------------
-// [POST] Categories (admin)
-// return created category
-// -------------------------
+// --------------------------------------------------
+// [POST] /categories (admin)
+// Create category
+// --------------------------------------------------
 router.post('/', sessionAuth, async (req, res) => {
-  if (req.session?.user?.role !== 'admin') {
+  if (req.session.user.role !== 'admin') {
     res.json({ error: 'Admin only' });
     return;
   }
 
-  const name = req.body?.name;
-  const slug = req.body?.slug;
+  const name = req.body.name;
+  const slug = req.body.slug;
 
-  if (!name || !slug) {
+ 	if (!name || !slug) {
     res.json({ error: 'name and slug are required' });
     return;
   }
@@ -32,21 +33,21 @@ router.post('/', sessionAuth, async (req, res) => {
   res.json(category);
 });
 
-// -------------------------
-// [GET] Categories (public)
-// return array
-// -------------------------
+// --------------------------------------------------
+// [GET] /categories (public)
+// Return all categories
+// --------------------------------------------------
 router.get('/', async (_req, res) => {
   const categories = await prisma.category.findMany();
   res.json(categories);
 });
 
-// -------------------------
-// [PATCH] Categories/:id (admin)
-// return updated
-// -------------------------
+// --------------------------------------------------
+// [PATCH] /categories/:id (admin)
+// Update category
+// --------------------------------------------------
 router.patch('/:id', sessionAuth, async (req, res) => {
-  if (req.session?.user?.role !== 'admin') {
+  if (req.session.user.role !== 'admin') {
     res.json({ error: 'Admin only' });
     return;
   }
@@ -67,11 +68,12 @@ router.patch('/:id', sessionAuth, async (req, res) => {
   res.json(category);
 });
 
-// -------------------------
-// [DELETE] Categories/:id (admin)
-// -------------------------
+// --------------------------------------------------
+// [DELETE] /categories/:id (admin)
+// Delete category
+// --------------------------------------------------
 router.delete('/:id', sessionAuth, async (req, res) => {
-  if (req.session?.user?.role !== 'admin') {
+  if (req.session.user.role !== 'admin') {
     res.json({ error: 'Admin only' });
     return;
   }

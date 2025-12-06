@@ -1,26 +1,26 @@
 // sessions.js
-// -------------------------
+
+// --------------------------------------------------
 // Import packages
-// -------------------------
+// --------------------------------------------------
 const express = require('express');
 const router = express.Router();
 
 const prisma = require('../lib/prisma');
-
 const sessionAuth = require('../middleware/sessionAuth');
 
-// -------------------------
+// --------------------------------------------------
 // Middleware: authenticatie vereist
-// -------------------------
+// --------------------------------------------------
 router.use(sessionAuth);
 
-// -------------------------
-// [POST] Sessions 
-// return created audit row
-// -------------------------
+// --------------------------------------------------
+// [POST] /sessions
+// Create audit session entry (login event)
+// --------------------------------------------------
 router.post('/', async (req, res) => {
-  const userId = Number(req.session?.user?.id);
-  const role = req.session?.user?.role || 'user';
+  const userId = Number(req.session.user.id);
+  const role = req.session.user.role || 'user';
 
   const item = await prisma.session.create({
     data: { userId, role, loginTime: new Date() },
@@ -29,12 +29,13 @@ router.post('/', async (req, res) => {
   res.json(item);
 });
 
-// -------------------------
-// [PATCH] Sessions/:id/logout 
-// return updated audit row
-// -------------------------
+// --------------------------------------------------
+// [PATCH] /sessions/:id/logout
+// Mark session logout time
+// --------------------------------------------------
 router.patch('/:id/logout', async (req, res) => {
   const id = Number(req.params.id);
+
   if (!Number.isInteger(id) || id <= 0) {
     res.json({ error: 'Invalid id' });
     return;

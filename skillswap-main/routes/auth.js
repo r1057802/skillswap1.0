@@ -36,43 +36,6 @@ async function sendResetEmail(email, token) {
   });
 }
 
-// -------------------------
-// [POST] /auth/bootstrap-admin
-// Temporary helper to create the first admin.
-// Enable by setting BOOTSTRAP_ADMIN_KEY in .env and sending it via header `x-bootstrap-key` or body { key }.
-// Remember to remove the env var and restart after use.
-// -------------------------
-router.post('/bootstrap-admin', async (req, res) => {
-  // If not explicitly enabled, deny.
-  if (!process.env.BOOTSTRAP_ADMIN_KEY) {
-    return res.status(403).json({ error: 'bootstrap disabled' });
-  }
-
-  const key = req.headers['x-bootstrap-key'] || req.body?.key;
-  if (key !== process.env.BOOTSTRAP_ADMIN_KEY) {
-    return res.status(403).json({ error: 'forbidden' });
-  }
-
-  // Avoid multiple admins created this way.
-  const existingAdmin = await prisma.user.findFirst({ where: { role: 'admin' } });
-  if (existingAdmin) {
-    return res.json({ error: 'admin already exists' });
-  }
-
-  const {
-    email = 'admin@example.com',
-    username = 'admin',
-    password = 'changeme',
-  } = req.body || {};
-
-  const passwordHash = await bcrypt.hash(password, 10);
-  const user = await prisma.user.create({
-    data: { username, email, passwordHash, role: 'admin' },
-  });
-
-  const { passwordHash: _ph, ...safe } = user;
-  return res.json({ created: true, user: safe });
-});
 
 // -------------------------
 // [POST] /auth/register

@@ -1,22 +1,20 @@
 // users.js
-// -------------------------
+
+// --------------------------------------------------
 // Import packages
-// -------------------------
+// --------------------------------------------------
 const express = require('express');
 const bcrypt = require('bcrypt');
 const router = express.Router();
 const prisma = require('../lib/prisma');
 const sessionAuth = require('../middleware/sessionAuth');
 
-// [REMOVED] Public create endpoint moved to /auth/register
-// POST /users is intentionally removed to avoid duplication.
-
-// -------------------------
-// [GET] Users (admin only)
-// return minimal list of users
-// -------------------------
+// --------------------------------------------------
+// [GET] /users  (admin only)
+// Return minimal list of users
+// --------------------------------------------------
 router.get('/', sessionAuth, async (req, res) => {
-  if (req.session?.user?.role !== 'admin') {
+  if (req.session.user.role !== 'admin') {
     return res.status(403).json({ error: 'Admin only' });
   }
 
@@ -29,12 +27,10 @@ router.get('/', sessionAuth, async (req, res) => {
   res.json(users);
 });
 
-
-
-// -------------------------
-// [GET] Users/:id (auth)
-// return user (safe)
-// -------------------------
+// --------------------------------------------------
+// [GET] /users/:id (auth)
+// Return single user (safe)
+// --------------------------------------------------
 router.get('/:id', sessionAuth, async (req, res) => {
   const id = Number(req.params.id);
 
@@ -58,20 +54,22 @@ router.get('/:id', sessionAuth, async (req, res) => {
   res.json(safe);
 });
 
-// -------------------------
-// [DELETE] Users/:id (soft delete)
-// Only self or admin; sets deletedAt
-// -------------------------
+// --------------------------------------------------
+// [DELETE] /users/:id  (soft delete)
+// Only self or admin
+// --------------------------------------------------
 router.delete('/:id', sessionAuth, async (req, res) => {
   const id = Number(req.params.id);
+
   if (!Number.isInteger(id) || id <= 0) {
     res.json({ error: 'Invalid id' });
     return;
   }
 
-  const me = req.session?.user;
-  const isSelf = me && me.id === id;
-  const isAdmin = me && me.role === 'admin';
+  const me = req.session.user;
+  const isSelf = me.id === id;
+  const isAdmin = me.role === 'admin';
+
   if (!isSelf && !isAdmin) {
     res.status(403).json({ error: 'Forbidden' });
     return;
@@ -83,27 +81,31 @@ router.delete('/:id', sessionAuth, async (req, res) => {
     return;
   }
 
-  await prisma.user.update({ where: { id }, data: { deletedAt: new Date() } });
+  await prisma.user.update({
+    where: { id },
+    data: { deletedAt: new Date() },
+  });
+
   if (isSelf) {
     req.session.destroy(() => {});
   }
+
   res.status(204).send();
 });
 
-// -------------------------
-// [POST] Users/admin (admin only)
-// create a new admin user
-// body: { username, email, password }
-// -------------------------
+// --------------------------------------------------
+// [POST] /users/admin (admin only)
+// Create new admin user
+// --------------------------------------------------
 router.post('/admin', sessionAuth, async (req, res) => {
-  if (req.session?.user?.role !== 'admin') {
+  if (req.session.user.role !== 'admin') {
     res.json({ error: 'Admin only' });
     return;
   }
 
-  const username = req.body?.username;
-  const email = req.body?.email;
-  const password = req.body?.password;
+  const username = req.body.username;
+  const email = req.body.email;
+  const password = req.body.password;
 
   if (!username || !email || !password) {
     res.json({ error: 'username, email and password are required' });
@@ -117,17 +119,21 @@ router.post('/admin', sessionAuth, async (req, res) => {
   }
 
   const passwordHash = await bcrypt.hash(password, 10);
-  const user = await prisma.user.create({ data: { username, email, passwordHash, role: 'admin' } });
+
+  const user = await prisma.user.create({
+    data: { username, email, passwordHash, role: 'admin' },
+  });
+
   const { passwordHash: _ph, ...safe } = user;
   res.json(safe);
 });
 
-// -------------------------
-// [PATCH] Users/:id/role (admin only)
-// body: { role: 'user' | 'admin' }
-// -------------------------
+// --------------------------------------------------
+// [PATCH] /users/:id/role (admin only)
+// Change user role
+// --------------------------------------------------
 router.patch('/:id/role', sessionAuth, async (req, res) => {
-  if (req.session?.user?.role !== 'admin') {
+  if (req.session.user.role !== 'admin') {
     res.json({ error: 'Admin only' });
     return;
   }
@@ -138,17 +144,21 @@ router.patch('/:id/role', sessionAuth, async (req, res) => {
     return;
   }
 
-  const role = req.body?.role;
+  const role = req.body.role;
   const allowed = ['user', 'admin'];
+
   if (!allowed.includes(role)) {
     res.json({ error: 'Invalid role' });
     return;
   }
 
-  const user = await prisma.user.update({ where: { id }, data: { role } });
+  const user = await prisma.user.update({
+    where: { id },
+    data: { role },
+  });
+
   const { passwordHash: _ph, ...safe } = user;
   res.json(safe);
 });
-
 
 module.exports = router;

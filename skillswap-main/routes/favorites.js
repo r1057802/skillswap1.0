@@ -1,29 +1,33 @@
 // favorites.js
-// -------------------------
+
+// --------------------------------------------------
 // Import packages
-// -------------------------
+// --------------------------------------------------
 const express = require('express');
 const router = express.Router();
 const prisma = require('../lib/prisma');
 const sessionAuth = require('../middleware/sessionAuth');
 
-// -------------------------
+// --------------------------------------------------
 // Middleware: authenticatie vereist
-// -------------------------
+// --------------------------------------------------
 router.use(sessionAuth);
 
-// -------------------------
-// [GET] Favorites 
-// return array (own user)
-// -------------------------
+// --------------------------------------------------
+// [GET] /favorites
+// Get all favorites for current user
+// --------------------------------------------------
 router.get('/', async (req, res) => {
-  const userId = Number(req.session?.user?.id);
+  const userId = Number(req.session.user.id);
 
   const favorites = await prisma.favorite.findMany({
     where: { userId },
     include: {
       listing: {
-        include: { category: true, _count: { select: { favorites: true } } },
+        include: {
+          category: true,
+          _count: { select: { favorites: true } },
+        },
       },
     },
   });
@@ -31,13 +35,13 @@ router.get('/', async (req, res) => {
   res.json(favorites);
 });
 
-// -------------------------
-// [POST] Favorites 
-// body: { listingId }
-// -------------------------
+// --------------------------------------------------
+// [POST] /favorites
+// Add favorite
+// --------------------------------------------------
 router.post('/', async (req, res) => {
-  const userId = Number(req.session?.user?.id);
-  const listingId = Number(req.body?.listingId);
+  const userId = Number(req.session.user.id);
+  const listingId = Number(req.body.listingId);
 
   if (!Number.isInteger(userId) || !Number.isInteger(listingId)) {
     res.json({ error: 'listingId required' });
@@ -53,11 +57,12 @@ router.post('/', async (req, res) => {
   res.json(favorite);
 });
 
-// -------------------------
-// [DELETE] Favorites/:listingId
-// -------------------------
+// --------------------------------------------------
+// [DELETE] /favorites/:listingId
+// Remove favorite
+// --------------------------------------------------
 router.delete('/:listingId', async (req, res) => {
-  const userId = Number(req.session?.user?.id);
+  const userId = Number(req.session.user.id);
   const listingId = Number(req.params.listingId);
 
   if (!Number.isInteger(userId) || !Number.isInteger(listingId)) {
@@ -66,8 +71,10 @@ router.delete('/:listingId', async (req, res) => {
   }
 
   try {
-    await prisma.favorite.delete({ where: { userId_listingId: { userId, listingId } } });
-  } catch (e) {}
+    await prisma.favorite.delete({
+      where: { userId_listingId: { userId, listingId } },
+    });
+  } catch (_) {}
 
   res.json({ ok: true });
 });

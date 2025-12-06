@@ -1,27 +1,26 @@
 // searchLogs.js
-// -------------------------
+
+// --------------------------------------------------
 // Import packages
-// -------------------------
+// --------------------------------------------------
 const express = require('express');
 const router = express.Router();
 
 const prisma = require('../lib/prisma');
-
 const sessionAuth = require('../middleware/sessionAuth');
 
-// -------------------------
+// --------------------------------------------------
 // Middleware: authenticatie vereist
-// -------------------------
+// --------------------------------------------------
 router.use(sessionAuth);
 
-// -------------------------
-// [POST] SearchLogs 
-// body: { query }
-// return created log
-// -------------------------
+// --------------------------------------------------
+// [POST] /search-logs
+// Create search log entry
+// --------------------------------------------------
 router.post('/', async (req, res) => {
-  const userId = Number(req.session?.user?.id);
-  const query = req.body?.query;
+  const userId = Number(req.session.user.id);
+  const query = req.body.query;
 
   if (!Number.isInteger(userId) || userId <= 0 || !query) {
     res.json({ error: 'query is required (and login)' });

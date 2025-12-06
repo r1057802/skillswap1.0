@@ -64,23 +64,6 @@ onMounted(loadListings)
       ></iframe>
     </section>
 
-    <section v-if="listings.length" class="cards">
-      <article v-for="l in listings" :key="l.id" class="card">
-        <div class="meta">
-          <p class="pill">#{{ l.id }}</p>
-          <p class="pill type">{{ l.type }}</p>
-          <p class="pill cat">{{ l.category?.name || 'Onbekend' }}</p>
-        </div>
-        <h3>{{ l.title }}</h3>
-        <p class="loc">
-          {{ l.city || 'Onbekende stad' }}, {{ l.country || 'Onbekend land' }}
-        </p>
-        <div class="actions">
-          <RouterLink class="ghost" :to="`/listings/${l.id}`">Bekijk listing</RouterLink>
-        </div>
-      </article>
-    </section>
-
     <p v-else-if="!loading">Geen listings gevonden.</p>
   </main>
 </template>
@@ -119,12 +102,6 @@ onMounted(loadListings)
   font-weight: 700;
 }
 
-.cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 12px;
-}
-
 .map-frame {
   border: 1px solid #e2e8f0;
   border-radius: 12px;
@@ -137,67 +114,5 @@ onMounted(loadListings)
   width: 100%;
   height: 520px;
   border: none;
-}
-
-.card {
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 12px;
-  background: #fff;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.meta {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.pill {
-  padding: 4px 8px;
-  border-radius: 999px;
-  background: #f1f5f9;
-  font-weight: 700;
-  font-size: 12px;
-  color: #0f172a;
-}
-
-.type {
-  background: #ecfdf3;
-  color: #166534;
-}
-
-.cat {
-  background: #eff6ff;
-  color: #1d4ed8;
-}
-
-.loc {
-  color: #475569;
-}
-
-.actions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.ghost {
-  border: 1px solid #cbd5e1;
-  border-radius: 10px;
-  padding: 10px 12px;
-  font-weight: 700;
-  color: #0f172a;
-  text-decoration: none;
-  background: #fff;
-}
-
-a.primary {
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
 }
 </style>
