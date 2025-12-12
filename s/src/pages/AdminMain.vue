@@ -1,3 +1,4 @@
+<!-- Admin dashboard hub -->
 <script setup>
 // Simple admin hub with links to sections
 </script>

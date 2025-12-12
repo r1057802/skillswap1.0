@@ -1,14 +1,17 @@
 // bookings.js
-// -------------------------
+
+// --------------------------------------------------
 // Import packages
-// -------------------------
+// --------------------------------------------------
 const express = require('express');
 const router = express.Router();
 
 const prisma = require('../lib/prisma');
-
 const sessionAuth = require('../middleware/sessionAuth');
 
+// --------------------------------------------------
+// Helpers: parseSlots & isAllowedSlot
+// --------------------------------------------------
 function parseSlots(raw) {
   if (!raw) return [];
   try {
@@ -31,20 +34,19 @@ function isAllowedSlot(listing, dateObj) {
   });
 }
 
-// -------------------------
+// --------------------------------------------------
 // Middleware: authenticatie vereist
-// -------------------------
+// --------------------------------------------------
 router.use(sessionAuth);
 
-// -------------------------
-// [GET] Bookings 
-// return array (own bookings; admin may pass ?userId=)
-// -------------------------
+// --------------------------------------------------
+// [GET] /bookings
+// Get all bookings (admin can filter with ?userId=)
+// --------------------------------------------------
 router.get('/', async (req, res) => {
-  const sessionUserId = Number(req.session.user.id);
-  const isAdmin = req.session.user.role === 'admin';
-
-  const qUserId = req.query.userId ? Number(req.query.userId) : null;
+  const sessionUserId = Number(req.session?.user?.id);
+  const isAdmin = req.session?.user?.role === 'admin';
+  const qUserId = req.query?.userId ? Number(req.query.userId) : null;
 
   let where;
   if (isAdmin) {
@@ -52,6 +54,7 @@ router.get('/', async (req, res) => {
       ? { userId: qUserId, deletedAt: null }
       : { deletedAt: null };
   } else {
+    // Toon eigen aanvragen en aanvragen op mijn listings
     where = {
       deletedAt: null,
       OR: [{ userId: sessionUserId }, { ownerId: sessionUserId }],
@@ -70,10 +73,10 @@ router.get('/', async (req, res) => {
   res.json(bookings);
 });
 
-// -------------------------
-// [GET] Bookings/:id 
-// return booking (only own or admin)
-// -------------------------
+// --------------------------------------------------
+// [GET] /bookings/:id
+// Get single booking (only own or admin)
+// --------------------------------------------------
 router.get('/:id', async (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id) || id <= 0) {
@@ -96,13 +99,12 @@ router.get('/:id', async (req, res) => {
   res.json(booking);
 });
 
-// -------------------------
-// [POST] Bookings 
-// body: { listingId, scheduledAt, status? }
-// return created booking
-// -------------------------
+// --------------------------------------------------
+// [POST] /bookings
+// Create a new booking
+// --------------------------------------------------
 router.post('/', async (req, res) => {
-  const userId = Number(req.session.user.id);
+  const userId = Number(req.session?.user?.id);
   const listingId = Number(req.body?.listingId);
   const scheduledAt = req.body?.scheduledAt;
   const status = req.body?.status;
@@ -144,10 +146,10 @@ router.post('/', async (req, res) => {
   res.json(booking);
 });
 
-// -------------------------
-// [PATCH] Bookings/:id 
-// return updated booking
-// -------------------------
+// --------------------------------------------------
+// [PATCH] /bookings/:id
+// Update booking
+// --------------------------------------------------
 router.patch('/:id', async (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id) || id <= 0) {
@@ -173,7 +175,6 @@ router.patch('/:id', async (req, res) => {
   const me = req.session.user;
   const isAllowed =
     current.userId === me.id || current.ownerId === me.id || me.role === 'admin';
-
   if (!isAllowed) {
     res.json({ error: 'Forbidden' });
     return;
@@ -223,13 +224,14 @@ router.patch('/:id', async (req, res) => {
       });
     } catch (_) {}
   }
+
   res.json(booking);
 });
 
-// -------------------------
-// [DELETE] Bookings/:id 
-// return { ok: true }
-// -------------------------
+// --------------------------------------------------
+// [DELETE] /bookings/:id
+// Soft delete booking
+// --------------------------------------------------
 router.delete('/:id', async (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id) || id <= 0) {
@@ -243,9 +245,9 @@ router.delete('/:id', async (req, res) => {
     return;
   }
 
-  const me = req.session.user;
-  const isOwner = current.userId === me.id || current.ownerId === me.id;
-  const isAdmin = me.role === 'admin';
+  const me = req.session?.user;
+  const isOwner = me && (current.userId === me.id || current.ownerId === me.id);
+  const isAdmin = me && me.role === 'admin';
 
   if (!isOwner && !isAdmin) {
     res.status(403).json({ error: 'Forbidden' });

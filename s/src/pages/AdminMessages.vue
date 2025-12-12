@@ -1,3 +1,4 @@
+<!-- Admin tool to send notifications to users -->
 <script setup>
 import { ref } from 'vue'
 

@@ -1,4 +1,5 @@
-﻿<template>
+﻿<!-- Login page for users and admins -->
+<template>
   <div class="login-page">
     <h1>Login</h1>
     <form @submit.prevent="handleLogin" novalidate>

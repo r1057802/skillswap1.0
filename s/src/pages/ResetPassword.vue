@@ -1,3 +1,4 @@
+<!-- Page to submit a reset token and choose a new password -->
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'

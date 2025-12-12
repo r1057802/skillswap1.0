@@ -1,38 +1,26 @@
-# eurosong-front
+# SkillSwap Frontend (student versie)
 
-This template should help get you started developing with Vue 3 in Vite.
+Vue 3 + Vite frontend voor SkillSwap. Gebruikt routes voor login/register/dashboard/admin en praat met de backend via `VITE_API_BASE`.
 
-## Recommended IDE Setup
+## Snel starten
+1. Installeren:
+   ```bash
+   npm install
+   ```
+2. Zet in `.env` de API-base, bv.:
+   ```
+   VITE_API_BASE=http://localhost:3000
+   ```
+   (of `/api` als je via een proxy werkt).
+3. Start dev-server:
+   ```bash
+   npm run dev
+   ```
+4. Productie build:
+   ```bash
+   npm run build
+   ```
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+Let op: voor echte data moet de backend (in `skillswap-main`) draaien en `VITE_API_BASE` naar die server wijzen.
 
-## Recommended Browser Setup
-
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd) 
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
-
-```sh
-npm install
-```
-
-### Compile and Hot-Reload for Development
-
-```sh
-npm run dev
-```
-
-### Compile and Minify for Production
-
-```sh
-npm run build
-```
+Tip: installeer de Vue Devtools in je browser voor debuggen.

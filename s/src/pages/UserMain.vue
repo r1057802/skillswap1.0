@@ -1,3 +1,4 @@
+<!-- User dashboard with booking overview -->
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { user } from '@/auth'

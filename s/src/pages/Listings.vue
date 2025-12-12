@@ -1,3 +1,4 @@
+<!-- Public listing browse and search page -->
 <script setup>
 import { ref, onMounted } from 'vue'
 

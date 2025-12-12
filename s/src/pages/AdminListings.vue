@@ -1,3 +1,4 @@
+<!-- Admin page to manage all listings -->
 <script setup>
 import { ref, onMounted } from 'vue'
 

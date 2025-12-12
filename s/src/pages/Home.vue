@@ -1,3 +1,4 @@
+<!-- Landing page placeholder -->
 <script setup>
 // Placeholder component
 </script>

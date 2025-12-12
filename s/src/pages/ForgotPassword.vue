@@ -1,3 +1,4 @@
+<!-- Public page to request a password reset email -->
 <script setup>
 import { ref } from 'vue'
 

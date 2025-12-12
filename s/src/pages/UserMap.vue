@@ -1,3 +1,4 @@
+<!-- Map view pulling generated Folium map from backend -->
 <script setup>
 import { ref, onMounted } from 'vue'
 

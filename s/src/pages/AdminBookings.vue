@@ -1,3 +1,4 @@
+<!-- Admin view to review and delete bookings -->
 <script setup>
 import { ref, onMounted } from 'vue'
 

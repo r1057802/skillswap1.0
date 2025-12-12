@@ -1,3 +1,4 @@
+// Shared auth state and helpers to fetch the current user and handle logout
 import { ref } from 'vue'
 
 const user = ref(null)

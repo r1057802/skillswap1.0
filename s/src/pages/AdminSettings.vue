@@ -1,3 +1,4 @@
+<!-- Admin page for creating admins and categories -->
 <script setup>
 import { ref } from 'vue'
 

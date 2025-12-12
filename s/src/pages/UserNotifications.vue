@@ -1,3 +1,4 @@
+<!-- User inbox for notifications -->
 <script setup>
 import { ref, onMounted } from 'vue'
 
