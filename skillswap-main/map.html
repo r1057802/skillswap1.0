@@ -17,7 +17,7 @@
             <meta name="viewport" content="width=device-width,
                 initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
             <style>
-                #map_dd5ef69ea4e3c11312071667b7894a87 {
+                #map_7563ac83ed593ba604b4af389dccc371 {
                     position: relative;
                     width: 100.0%;
                     height: 100.0%;
@@ -57,14 +57,14 @@
 <body>
     
     
-            <div class="folium-map" id="map_dd5ef69ea4e3c11312071667b7894a87" ></div>
+            <div class="folium-map" id="map_7563ac83ed593ba604b4af389dccc371" ></div>
         
 </body>
 <script>
     
     
-            var map_dd5ef69ea4e3c11312071667b7894a87 = L.map(
-                "map_dd5ef69ea4e3c11312071667b7894a87",
+            var map_7563ac83ed593ba604b4af389dccc371 = L.map(
+                "map_7563ac83ed593ba604b4af389dccc371",
                 {
                     center: [50.85, 4.35],
                     crs: L.CRS.EPSG3857,
@@ -81,7 +81,7 @@
 
         
     
-            var tile_layer_1702608d3dba8f04b7b906c59bff085b = L.tileLayer(
+            var tile_layer_eb67763932b5343fcef76c09c1f49aae = L.tileLayer(
                 "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
                 {
   "minZoom": 0,
@@ -98,16 +98,41 @@
             );
         
     
-            tile_layer_1702608d3dba8f04b7b906c59bff085b.addTo(map_dd5ef69ea4e3c11312071667b7894a87);
+            tile_layer_eb67763932b5343fcef76c09c1f49aae.addTo(map_7563ac83ed593ba604b4af389dccc371);
         
     
-            var marker_cluster_e3d10d6c93f4fbacc5b77d121888f59f = L.markerClusterGroup(
+            var marker_cluster_4e70eec301bccbd4e95ff28018c0c668 = L.markerClusterGroup(
                 {
 }
             );
         
     
-            marker_cluster_e3d10d6c93f4fbacc5b77d121888f59f.addTo(map_dd5ef69ea4e3c11312071667b7894a87);
+            var marker_80430946e085b7ef61489ec0819c66a9 = L.marker(
+                [51.2211097, 4.3997081],
+                {
+}
+            ).addTo(marker_cluster_4e70eec301bccbd4e95ff28018c0c668);
+        
+    
+        var popup_8466d6c545358bdd1341360b92486163 = L.popup({
+  "maxWidth": 250,
+  "minWidth": 150,
+});
+
+        
+            
+                var html_cce4a0c00e3820dd825e44a57d5217ed = $(`<div id="html_cce4a0c00e3820dd825e44a57d5217ed" style="width: 100.0%; height: 100.0%;">         <div style="font-family: Arial; font-size: 13px; padding: 6px; width: 200px;">             <strong>gitaar les</strong><br>             Stad: Antwerpen <br>             Land: Belgie             <br>             <a href="http://localhost:5173/listings/1" target="_blank" style="display:inline-block;margin-top:6px;padding:6px 10px;background:#0f172a;color:#e2e8f0;text-decoration:none;border-radius:6px;font-weight:700;">Boek deze listing</a>         </div>         </div>`)[0];
+                popup_8466d6c545358bdd1341360b92486163.setContent(html_cce4a0c00e3820dd825e44a57d5217ed);
+            
+        
+
+        marker_80430946e085b7ef61489ec0819c66a9.bindPopup(popup_8466d6c545358bdd1341360b92486163)
+        ;
+
+        
+    
+    
+            marker_cluster_4e70eec301bccbd4e95ff28018c0c668.addTo(map_7563ac83ed593ba604b4af389dccc371);
         
 </script>
 </html>

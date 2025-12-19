@@ -1,54 +1,73 @@
-# SkillSwap Backend (student versie)
+# SkillSwap Backend
 
-Eenvoudige uitleg voor de API die de SkillSwap app voedt.
+Complete setup-instructies voor een schone machine.
 
-## Wat zit erin?
-- Node.js + Express API
-- Prisma ORM met MySQL (schema: `prisma/schema.prisma`)
-- Sessies via `express-session`
-- Uploads met `multer`
-- Optioneel: e-mails voor wachtwoord reset (SMTP)
+## Vereisten
+- Node.js 18+ en npm
+- MySQL 8 (luistert op `localhost:3306`, database `skillswap`)
+- Python 3 + pip (voor de Folium kaartgenerator)
 
-## Snel starten
-1. Installeer:
-   ```bash
-   cd skillswap-main
-   npm install
-   ```
-2. Zet `.env` goed (kopieer de meegeleverde en pas aan):
-   - `DATABASE_URL` bv. `mysql://user:pass@localhost:3306/skillswap`
-   - `SESSION_SECRET` een random string
-   - Optioneel SMTP voor reset-mails: `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`
-   - `FRONTEND_RESET_URL` bv. `http://localhost:5173/reset-password`
-3. Maak de database aan met Prisma:
-   ```bash
-   npx prisma migrate dev --name init
-   npx prisma generate
-   ```
+## Installatie
+```bash
+cd skillswap-main
+npm install
+```
 
-## Runnen
-- Ontwikkeling (autoreload): `npm run dev`
-- Productie: `npm start`
-Standaard poort: 3000 (pas `PORT` aan als je wilt).
+## .env invullen
+Maak `.env` aan (of vul de bestaande) met bijvoorbeeld:
+```
+DATABASE_URL="mysql://root:Senina12@localhost:3306/skillswap"
+SESSION_SECRET=een_random_string
+FRONTEND_RESET_URL=http://localhost:5173/reset-password
 
-### Optioneel: kaart genereren
-De `/map` route gebruikt `map.html` uit `generate_map.py`. Om die te bouwen:
-- Installeer Python 3.
-- Installeer deps:
-  ```bash
-  pip install folium geopy pycountry mysql-connector-python
-  ```
-- Pas in `generate_map.py` de DB-config aan indien nodig.
-- Run:
-  ```bash
-  python generate_map.py
-  ```
-Hiermee wordt `map.html` geüpdatet.
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=jouw_gmail
+SMTP_PASS=app_password_zonder_spaties
+SMTP_FROM="SkillSwap <jouw_gmail>"
 
-## Belangrijke routes
-- `/auth` login/register/forgot/reset/me/logout
-- `/listings` listings ophalen of aanmaken, bookings via `/:id/bookings`, favorites aan/uit
-- `/bookings` beheer bookings (auth)
-- `/users`, `/categories`, `/search`, `/upload`, `/map`, `/notifications`, `/sessions`, `/search-logs`
+FRONTEND_BASE_URL=http://localhost:5173
+BACKEND_BASE_URL=http://localhost:3000
+```
+> Zorg dat `SESSION_SECRET` niet leeg is. Voor Gmail heb je een app password nodig.
 
-De frontend moet `VITE_API_BASE` laten wijzen naar deze server en requests doen met cookies (`credentials: 'include'`). Pas CORS/HTTPS aan in productie.
+## Database klaarzetten
+1. Start MySQL en zorg dat de database `skillswap` bestaat.
+2. Sync schema:
+```bash
+npx prisma db push
+```
+   (of `npx prisma migrate deploy` als je migrations wilt toepassen)
+
+## Python dependencies (kaart)
+```bash
+pip install folium geopy pycountry mysql-connector-python
+```
+
+## Server starten
+- Development (nodemon): `npm run dev`
+- Zonder nodemon: `node -r dotenv/config server.js`
+Standaard draait hij op poort 3000.
+
+## Kaart regenereren
+- Via frontend-knop (roept `/map?regenerate=1` aan), of
+- Handmatig: `curl "http://localhost:3000/map?regenerate=1"`
+
+## Wachtwoord reset testen
+1. POST `/auth/forgot-password` met `{"email":"<bestaat>"}`.
+2. Token uit mail of DB (`SELECT passwordResetToken FROM users WHERE email='...'`).
+3. POST `/auth/reset-password` met `{"token":"<token>","password":"NieuwPass!"}`.
+
+## Admin snel aanmaken (SQL)
+```sql
+INSERT INTO users (username,email,passwordHash,role,updatedAt)
+VALUES ('admin','admin@example.com',
+'$2b$10$VNkEr3CQ0/92QxzZ42TvIutY0LcwGvAUBrmxfGs6obHuhbKpH6LRO',
+'admin', NOW());
+```
+Wachtwoord = `1` (pas aan naar iets sterks in met verander wachtwoord).
+
+## Handige scripts
+- `npm run dev` – start backend met nodemon
+- `npm start` – start backend zonder nodemon
