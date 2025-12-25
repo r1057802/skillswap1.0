@@ -28,6 +28,7 @@ def haal_data_op():
         SELECT 
             id,
             title,
+            address,
             city,
             country,
             latitude,
@@ -61,6 +62,10 @@ def genereer_map():
     for rij in data:
         lat = rij['latitude']
         lon = rij['longitude']
+        # Trim de tekstvelden zodat lege strings niet als adres tellen
+        address = (rij.get('address') or '').strip()
+        city = (rij.get('city') or '').strip()
+        country = (rij.get('country') or '').strip()
 
         # Prisma/SQL Decimal -> float
         if isinstance(lat, Decimal):
@@ -70,7 +75,7 @@ def genereer_map():
 
         # Geolocatie ophalen indien nodig
         if lat is None or lon is None:
-            land = rij['country']
+            land = country
             if land:
                 try:
                     country_obj = pycountry.countries.lookup(land)
@@ -78,11 +83,8 @@ def genereer_map():
                 except Exception:
                     pass
 
-            locatie_parts = []
-            if rij['city']:
-                locatie_parts.append(rij['city'])
-            if land:
-                locatie_parts.append(land)
+            # Eerst adres, dan stad, dan land
+            locatie_parts = [p for p in [address, city, land] if p]
             locatie = ", ".join(locatie_parts)
 
             if not locatie:
@@ -108,11 +110,15 @@ def genereer_map():
 
         detail_url = f"{FRONTEND_BASE}/listings/{rij['id']}"
 
+        # Voor weergave: toon alleen het echte adres; geen fallback naar stad/land
+        display_address = address or "-"
+
         popup_html = f"""
         <div style="font-family: Arial; font-size: 13px; padding: 6px; width: 200px;">
             <strong>{rij['title']}</strong><br>
-            Stad: {rij.get('city') or '-'}<br>
-            Land: {rij.get('country') or '-'}
+            Adres: {display_address}<br>
+            Stad: {city or '-'}<br>
+            Land: {country or '-'}
             {image_html}<br>
             <a href="{detail_url}" target="_blank" style="display:inline-block;margin-top:6px;padding:6px 10px;background:#0f172a;color:#e2e8f0;text-decoration:none;border-radius:6px;font-weight:700;">Boek deze listing</a>
         </div>

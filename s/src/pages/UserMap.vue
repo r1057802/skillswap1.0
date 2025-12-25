@@ -45,7 +45,6 @@ onMounted(loadListings)
     <header class="top">
       <div>
         <h1>Kaart</h1>
-        <p>Bekijk de Folium kaart die door de backend wordt gegenereerd.</p>
       </div>
       <button class="primary" :disabled="loading || mapRefreshing" @click="refreshMap">
         {{ mapRefreshing ? 'Kaart bouwen...' : 'Genereer kaart opnieuw' }}

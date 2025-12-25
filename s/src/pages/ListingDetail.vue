@@ -119,6 +119,7 @@ onMounted(loadListing)
             <span v-if="listing.owner">- door {{ listing.owner.username }}</span>
             <span v-if="listing.city || listing.country">- {{ listing.city }}<span v-if="listing.city && listing.country">, </span>{{ listing.country }}</span>
           </p>
+          <p class="meta" v-if="listing.address">Adres: {{ listing.address }}</p>
         </div>
         <img v-if="listing.imageUrl" :src="listing.imageUrl" alt="" class="hero" />
       </header>

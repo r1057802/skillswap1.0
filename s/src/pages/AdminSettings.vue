@@ -89,10 +89,9 @@ const createCategory = async () => {
 
     <section class="card">
       <div class="card-head">
-        <div>
-          <h2>Nieuwe admin</h2>
-          <p>Maak een nieuwe admin aan via de bestaande backend.</p>
-        </div>
+      <div>
+        <h2>Nieuwe admin</h2>
+      </div>
         <button class="primary" :disabled="adminBusy" @click="createAdmin">
           {{ adminBusy ? 'Bezig...' : 'Aanmaken' }}
         </button>
@@ -117,10 +116,9 @@ const createCategory = async () => {
 
     <section class="card">
       <div class="card-head">
-        <div>
-          <h2>Nieuwe categorie</h2>
-          <p>Voeg eenvoudig een categorie toe.</p>
-        </div>
+      <div>
+        <h2>Nieuwe categorie</h2>
+      </div>
         <button class="primary" :disabled="categoryBusy" @click="createCategory">
           {{ categoryBusy ? 'Bezig...' : 'Aanmaken' }}
         </button>
