@@ -12,13 +12,12 @@ FRONTEND_BASE = os.environ.get('FRONTEND_BASE_URL', 'http://localhost:5173')
 # Backend URL om imageUrl volledig te maken indien relatief
 BACKEND_BASE = os.environ.get('BACKEND_BASE_URL', 'http://localhost:3000')
 
-# Eenvoudige DB-config (pas aan aan je .env)
-# Of parse DATABASE_URL met python-dotenv als je wil.
+# Eenvoudige DB-config uit env (plaats geen wachtwoorden in code)
 config = {
-    'host': 'localhost',
-    'user': 'root',
-    'password': 'Senina12',
-    'database': 'skillswap',
+    'host': os.environ.get('DB_HOST', 'localhost'),
+    'user': os.environ.get('DB_USER', 'root'),
+    'password': os.environ.get('DB_PASSWORD', ''),
+    'database': os.environ.get('DB_NAME', 'skillswap'),
 }
 
 def haal_data_op():

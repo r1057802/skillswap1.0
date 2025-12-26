@@ -29,7 +29,7 @@ const loadListings = async () => {
 
 const refreshMap = async () => {
   mapRefreshing.value = true
-  mapUrl.value = `${API_BASE}/map?regenerate=1&ts=${Date.now()}`
+  mapUrl.value = `${API_BASE}/map?ts=${Date.now()}`
   try {
     await loadListings()
   } finally {

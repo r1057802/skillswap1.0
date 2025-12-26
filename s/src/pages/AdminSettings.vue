@@ -108,7 +108,7 @@ const createCategory = async () => {
         </label>
         <label>
           Wachtwoord
-          <input v-model="adminForm.password" type="password" placeholder="••••••••" />
+          <input v-model="adminForm.password" type="password" placeholder="Min. 8 tekens" />
         </label>
       </div>
       <p v-if="adminMessage" class="status">{{ adminMessage }}</p>

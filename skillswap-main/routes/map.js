@@ -7,6 +7,7 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const { execFile } = require('child_process');
+const sessionAuth = require('../middleware/sessionAuth');
 
 const router = express.Router();
 
@@ -50,9 +51,16 @@ const needsRefresh = () => {
 // --------------------------------------------------
 router.get('/', async (req, res) => {
   const force = req.query.regenerate === '1';
+  const isAdmin = req.session?.user?.role === 'admin';
 
   try {
-    if (force || needsRefresh()) {
+    if (force && !isAdmin) {
+      return res.status(403).json({ error: 'Alleen admin mag regenereren' });
+    }
+
+    const allowGenerate = force ? isAdmin : (isAdmin || !fs.existsSync(MAP_HTML_PATH));
+
+    if (allowGenerate && (force || needsRefresh())) {
       await runPythonGenerator();
     }
     res.sendFile(MAP_HTML_PATH);
